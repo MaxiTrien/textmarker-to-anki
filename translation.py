@@ -1,6 +1,7 @@
 import os 
 from googletrans import Translator
 from collections import defaultdict
+from export_to_anki import data_to_csv
 
 
 def clean_linebreaks(sentences):
@@ -10,17 +11,17 @@ def clean_linebreaks(sentences):
 
 def convert_data(translated, header, textmarker_data):
     for translation in translated:
-        textmarker_data['title'] = header.title
-        textmarker_data['ulr'] = header.ulr
-        textmarker_data['sentence'] = translation.origin
-        textmarker_data['translation'] = translation.translation
-    
+        textmarker_data['sentence'].append(translation.origin)
+        textmarker_data['translation'].append(translation.text)
+        textmarker_data['title'].append(header[2])
+        textmarker_data['ulr'].append(header[1][header[1].rfind(' ') + 1:])  # Cut out only the url
+        
     return textmarker_data
         
 
 input_dir = r'C:\Users\Maxi\Desktop\中文课\textmarker_history'
 split_seq = ['\n', '\n']
-textmaker_data = defaultdict()
+textmarker_data = defaultdict(list)
 
 for history_file in os.listdir(input_dir):
     if history_file.endswith('.txt'):
@@ -36,8 +37,11 @@ for history_file in os.listdir(input_dir):
                 
                 translator = Translator()
                 trans_sentences = translator.translate(sentences)
-                textmarker_data= convert_data(trans_sentences, header)
-                
+                textmarker_data = convert_data(
+                    trans_sentences, header, textmarker_data)
+
+data_to_csv(textmarker_data, input_dir)
+
 print('Translations finished!')
 
 
